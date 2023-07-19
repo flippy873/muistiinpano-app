@@ -46,8 +46,7 @@ function showTodo(filter) {
 }
 showTodo("all");
 
-//i have added a task before tutorial so that shows here for test
-// if you don't have any tasks no problem it isn't bug
+
 
 function showMenu(selectedTask) {
     let menuDiv = selectedTask.parentElement.lastElementChild;
