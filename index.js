@@ -1,110 +1,230 @@
-const taskInput = document.querySelector(".task-input input"),
-    filters = document.querySelectorAll(".filters span"),
-    clearAll = document.querySelector(".clear-btn"),
-    taskBox = document.querySelector(".task-box");
+const welcomeScreen = document.getElementById('welcomeScreen');
+const newSaleScreen = document.getElementById('newSaleScreen');
+const viewSalesScreen = document.getElementById('viewSalesScreen');
+const newSaleScreenBtn = document.getElementById('newSaleScreenBtn');
+const viewSalesBtn = document.getElementById('viewSalesBtn');
+const goBackBtn = document.getElementById('goBackBtn');
+const goBackFromSalesBtn = document.getElementById('goBackFromSalesBtn');
+const calculateProfitBtn = document.getElementById('calculateProfitBtn');
+const saveSaleBtn = document.getElementById('saveSaleBtn');
+const profitResults = document.getElementById('profitResults');
+const deleteAllSalesBtn = document.getElementById('deleteAllSalesBtn');
+const salesList = document.getElementById('salesList');
+const downloadJsonBtn = document.getElementById('downloadJson');
+const filterLocation = document.getElementById('filterLocation');
+const filterDate = document.getElementById('filterDate');
+const now = new Date();
+const date = now.toLocaleDateString(); // Tämä asettaa päivämäärän oikein
+// Tallennetut myynnit
+let sales = JSON.parse(localStorage.getItem('sales')) || [];
+let filteredSales = [...sales];
 
-let editId,
-    isEditTask = false,
-    todos = JSON.parse(localStorage.getItem("todo-list"));
-
-filters.forEach(btn => {
-    btn.addEventListener("click", () => {
-        document.querySelector("span.active").classList.remove("active");
-        btn.classList.add("active");
-        showTodo(btn.id);
-    });
+// Näyttöjen hallinta
+document.addEventListener('DOMContentLoaded', () => {
+  welcomeScreen.classList.remove('hidden');
+  newSaleScreen.classList.add('hidden');
+  viewSalesScreen.classList.add('hidden');
 });
 
-function showTodo(filter) {
-    let liTag = "";
-    if (todos) {
-        todos.forEach((todo, id) => {
-            let completed = todo.status == "completed" ? "checked" : "";
-            if (filter == todo.status || filter == "all") {
-                liTag += `<li class="task">
-                    <label for="${id}">
-                        <input onclick="updateStatus(this)" type="checkbox" id="${id}" ${completed}>
-                        <p class="${completed}">${todo.name}</p>
-                    </label>
-                    <div class="settings">
-                        <i onclick="showMenu(this)" class="uil uil-ellipsis-h"></i>
-                        <ul class="task-menu">
-                            <li onclick='editTask(${id}, "${todo.name}")'><i class="uil uil-pen"></i>Edit</li>
-                            <li onclick='deleteTask(${id}, "${filter}")'><i class="uil uil-trash"></i>Delete</li>
-                        </ul>
-                    </div>
-                </li>`;
-            }
-        });
-    }
-
-    taskBox.innerHTML = liTag || `<span>No tasks available</span>`;
-    let checkTask = taskBox.querySelectorAll(".task");
-    !checkTask.length ? clearAll.classList.remove("active") : clearAll.classList.add("active");
-    taskBox.offsetHeight >= 300 ? taskBox.classList.add("overflow") : taskBox.classList.remove("overflow");
-
-}
-showTodo("all");
-
-
-
-function showMenu(selectedTask) {
-    let menuDiv = selectedTask.parentElement.lastElementChild;
-    menuDiv.classList.add("show");
-    document.addEventListener("click", e => {
-        if (e.target.tagName != "I" || e.target != selectedTask) {
-            menuDiv.classList.remove("show");
-        }
-    });
-}
-
-function updateStatus(selectedTask) {
-    let taskName = selectedTask.parentElement.lastElementChild;
-    if (selectedTask.checked) {
-        taskName.classList.add("checked");
-        todos[selectedTask.id].status = "completed";
-    } else {
-        taskName.classList.remove("checked");
-        todos[selectedTask.id].status = "pending";
-    }
-    localStorage.setItem("todo-list", JSON.stringify(todos))
-}
-
-function editTask(taskId, textName) {
-    editId = taskId;
-    isEditTask = true;
-    taskInput.value = textName;
-    taskInput.focus();
-    taskInput.classList.add("active");
-}
-
-function deleteTask(deleteId, filter) {
-    isEditTask = false;
-    todos.splice(deleteId, 1);
-    localStorage.setItem("todo-list", JSON.stringify(todos));
-    showTodo(filter);
-}
-
-clearAll.addEventListener("click", () => {
-    isEditTask = false;
-    todos.splice(0, todos.length);
-    localStorage.setItem("todo-list", JSON.stringify(todos));
-    showTodo();
+newSaleScreenBtn.addEventListener('click', () => {
+  welcomeScreen.classList.add('hidden');
+  newSaleScreen.classList.remove('hidden');
 });
 
-taskInput.addEventListener("keyup", e => {
-    let userTask = taskInput.value.trim();
-    if (e.key == "Enter" && userTask) {
-        if (!isEditTask) {
-            todos = !todos ? [] : todos;
-            let taskInfo = { name: userTask, status: "pending" };
-            todos.push(taskInfo);
-        } else {
-            isEditTask = false;
-            todos[editId].name = userTask;
-        }
-        taskInput.value = "";
-        localStorage.setItem("todo-list", JSON.stringify(todos));
-        showTodo(document.querySelector("span.active").id);
-    }
+viewSalesBtn.addEventListener('click', () => {
+  welcomeScreen.classList.add('hidden');
+  viewSalesScreen.classList.remove('hidden');
+  showFilteredSales();
 });
+
+goBackBtn.addEventListener('click', () => {
+  newSaleScreen.classList.add('hidden');
+  welcomeScreen.classList.remove('hidden');
+  resetForm();
+});
+
+goBackFromSalesBtn.addEventListener('click', () => {
+  viewSalesScreen.classList.add('hidden');
+  welcomeScreen.classList.remove('hidden');
+});
+
+// Laske kate ja näytä tulokset
+calculateProfitBtn.addEventListener('click', () => {
+  const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
+  const salePrice = parseFloat(document.getElementById('salePrice').value);
+
+  if (!isNaN(purchasePrice) && !isNaN(salePrice)) {
+    const profit = salePrice - purchasePrice;
+    const profitPercentage = ((profit / purchasePrice) * 100).toFixed(2);
+
+    document.getElementById('profit').textContent = profit.toFixed(2);
+    document.getElementById('profitPercentage').textContent = profitPercentage;
+    profitResults.classList.remove('hidden');
+    saveSaleBtn.classList.remove('hidden');
+  } else {
+    alert('Täytä sekä ostohinta että myyntihinta oikein.');
+  }
+});
+
+saveSaleBtn.addEventListener('click', () => {
+  const purchaseLocation = document.getElementById('purchaseLocation').value.trim();
+  const productName = document.getElementById('productName').value.trim();
+  const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
+  const salePrice = parseFloat(document.getElementById('salePrice').value);
+  const saleDate = document.getElementById('saleDate').value.trim();  // Myyntipäivämäärä
+
+  if (!purchaseLocation || !productName || isNaN(purchasePrice) || isNaN(salePrice) || !saleDate) {
+    alert('Täytä kaikki kentät oikein ennen tallennusta.');
+    return;
+  }
+
+  // Laskee kate ja kateprosentti
+  const profit = (salePrice - purchasePrice).toFixed(2);
+  const profitPercentage = ((profit / purchasePrice) * 100).toFixed(2);
+
+  // Lisää päivämäärän ja kellonajan
+  const now = new Date();
+  const time = now.toLocaleTimeString(); // Esim. "15:45:30"
+
+  // Luo myyntitieto-objektin
+  const sale = {
+    purchaseLocation,
+    productName,
+    purchasePrice,
+    salePrice,
+    profit,
+    profitPercentage,
+    saleDate,  // Päivämäärä, jonka käyttäjä syöttää
+    time, // Kellonaika
+  };
+
+  // Tallenna localStorageen
+  let sales = JSON.parse(localStorage.getItem('sales')) || [];
+  sales.push(sale);
+  localStorage.setItem('sales', JSON.stringify(sales));
+
+  alert('Myynti tallennettu!');
+  resetForm();
+});
+
+// Näytä myynnit
+function showFilteredSales() {
+  salesList.innerHTML = '';
+  filteredSales.forEach((sale, index) => {
+    const saleItem = document.createElement('div');
+    saleItem.className = 'sale-item';
+
+    // Korjattu päivämäärän käyttö: käytetään sale.saleDate
+    saleItem.innerHTML = `
+      <p><strong>${sale.productName}</strong> (${sale.purchaseLocation}, ${sale.saleDate})</p>
+      <p>Ostohinta: €${sale.purchasePrice}, Myyntihinta: €${sale.salePrice}</p>
+      <p>Kate: €${sale.profit}, Kateprosentti: ${sale.profitPercentage}%</p>
+      <button onclick="editSale(${index})">Muokkaa</button>
+      <button onclick="deleteSale(${index})">Poista</button>
+    `;
+    salesList.appendChild(saleItem);
+  });
+}
+
+// Muokkaa myyntiä
+function editSale(index) {
+  const sale = filteredSales[index];
+  document.getElementById('purchaseLocation').value = sale.purchaseLocation;
+  document.getElementById('productName').value = sale.productName;
+  document.getElementById('purchasePrice').value = sale.purchasePrice;
+  document.getElementById('salePrice').value = sale.salePrice;
+  document.getElementById('saleDate').value = sale.saleDate; // Korjattu tästä
+
+  sales.splice(index, 1);
+  localStorage.setItem('sales', JSON.stringify(sales));
+  newSaleScreen.classList.remove('hidden');
+  viewSalesScreen.classList.add('hidden');
+}
+
+// Muokkaa myyntiä
+function editSale(index) {
+  const sale = filteredSales[index];
+  document.getElementById('purchaseLocation').value = sale.purchaseLocation;
+  document.getElementById('productName').value = sale.productName;
+  document.getElementById('purchasePrice').value = sale.purchasePrice;
+  document.getElementById('salePrice').value = sale.salePrice;
+  document.getElementById('saleDate').value = sale.date;
+
+  sales.splice(index, 1);
+  localStorage.setItem('sales', JSON.stringify(sales));
+  newSaleScreen.classList.remove('hidden');
+  viewSalesScreen.classList.add('hidden');
+}
+
+// Poista myynti
+function deleteSale(index) {
+  sales.splice(index, 1);
+  localStorage.setItem('sales', JSON.stringify(sales));
+  applyFilters();
+}
+
+// Suodata myynnit
+function applyFilters() {
+  const locationFilter = filterLocation.value;
+  const dateFilter = filterDate.value;
+
+  filteredSales = sales.filter((sale) => {
+    return (
+      (locationFilter === '' || sale.purchaseLocation === locationFilter) &&
+      (dateFilter === '' || sale.date === dateFilter)
+    );
+  });
+  showFilteredSales();
+}
+
+// Tyhjennä suodatus
+function clearFilters() {
+  filterLocation.value = '';
+  filterDate.value = '';
+  filteredSales = [...sales];
+  showFilteredSales();
+}
+
+// Poista kaikki myynnit
+deleteAllSalesBtn.addEventListener('click', () => {
+  if (confirm('Oletko varma, että haluat poistaa kaikki myynnit?')) {
+    sales = [];
+    localStorage.removeItem('sales');
+    applyFilters();
+  }
+});
+
+newSaleScreenBtn.addEventListener('click', () => {
+  welcomeScreen.classList.add('hidden');
+  newSaleScreen.classList.remove('hidden');
+  document.getElementById('saleDate').value = ''; // Tyhjennä kenttä oletuksena
+});
+
+viewSalesBtn.addEventListener('click', () => {
+  welcomeScreen.classList.add('hidden');
+  viewSalesScreen.classList.remove('hidden');
+  showFilteredSales();
+  document.getElementById('saleDate').classList.add('hidden'); // Varmista piilotus
+});
+
+// Lataa tiedot JSON-muodossa
+downloadJsonBtn.addEventListener('click', () => {
+  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(sales));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute('href', dataStr);
+  downloadAnchor.setAttribute('download', 'sales_data.json');
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  document.body.removeChild(downloadAnchor);
+});
+
+// Nollaa lomake
+function resetForm() {
+  document.getElementById('purchaseLocation').value = '';
+  document.getElementById('productName').value = '';
+  document.getElementById('purchasePrice').value = '';
+  document.getElementById('salePrice').value = '';
+  document.getElementById('saleDate').value = '';
+  profitResults.classList.add('hidden');
+  saveSaleBtn.classList.add('hidden');
+}
