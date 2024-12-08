@@ -1,38 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
-    <link rel="stylesheet" href="style.css">
-    <title>Notes</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sellerdata - Home</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
+  <!-- Aloitussivu -->
+  <div id="welcomeScreen" class="center-screen">
+    <h1>Hei,</h1>
+    <button id="newSaleScreenBtn" class="primary-btn">Tee uusi myynti</button>
+    <button id="viewSalesBtn" class="secondary-btn">Tarkastele vanhoja myyntejä</button>
+  </div>
 
-    <div class="wrapper">
-        <div class="task-input">
-            <img src="bars-icon.svg">
-            <input type="text" placeholder="Create new note">
+  <!-- Myyntikäyttöliittymä -->
+  <div id="newSaleScreen" class="hidden">
+    <div class="container">
+      <h1>Uusi Myynti</h1>
+      <div class="form-container rounded">
+        <!-- Myyntipäivämäärä-kenttä näkyy vain uuden myynnin lomakkeessa -->
+        <label for="saleDate">Myyntipäivämäärä:</label>
+        <input type="date" id="saleDate" name="saleDate" placeholder="pp.kk.vvvv">
+        
+        <label for="purchaseLocation">Tuotteen ostopaikka:</label>
+        <input list="purchaseLocations" id="purchaseLocation" placeholder="Valitse tai kirjoita uusi">
+        <datalist id="purchaseLocations">
+          <option value="Tori.fi">
+          <option value="Power">
+          <option value="Gigantti">
+          <option value="Dna">
+          <option value="Elisa">
+          <option value="Telia">
+          <option value="Verkkokauppa.com">
+        </datalist>
+        
+        <label>Tuotteen nimi:</label>
+        <input type="text" id="productName" placeholder="Esim. Puhelin">
+        
+        <label>Ostohinta (€):</label>
+        <input type="number" id="purchasePrice" placeholder="Esim. 100" step="0.01">
+        
+        <label>Myyntihinta (€):</label>
+        <input type="number" id="salePrice" placeholder="Esim. 150" step="0.01">
+        
+        <div id="profitResults" class="hidden">
+          <p>Kate (€): <span id="profit"></span></p>
+          <p>Kateprosentti (%): <span id="profitPercentage"></span></p>
         </div>
-
-        <div class="controls">
-            <div class="filters">
-                <span id="all" class="active">
-                    All
-                </span>
-                <span id="pending">Pending</span>
-                <span id="completed">Done</span>
-            </div>
-            <button class="clear-btn">Delete all</button>
-        </div>
-        <ul class="task-box"></ul>
-
+        
+        <button id="calculateProfitBtn" class="primary-btn">Laske Kate</button>
+        <button id="saveSaleBtn" class="secondary-btn hidden">Tallenna Myynti</button>
+        <button id="goBackBtn" class="secondary-btn">Takaisin</button>
+      </div>
     </div>
+  </div>
 
-    <script src="index.js"></script>
+  <!-- Suodatuskentät -->
+  <div id="filters" class="hidden">
+    <label for="filterLocation">Suodata ostopaikan mukaan:</label>
+    <select id="filterLocation">
+      <option value="">Kaikki</option>
+      <option value="Tori.fi">Tori.fi</option>
+      <option value="Power">Power</option>
+      <option value="Gigantti">Gigantti</option>
+      <option value="Dna">Dna</option>
+      <option value="Elisa">Elisa</option>
+      <option value="Telia">Telia</option>
+      <option value="Verkkokauppa.com">Verkkokauppa.com</option>
+    </select>
+
+    <label for="filterDate">Suodata päivämäärän mukaan:</label>
+    <input type="date" id="filterDate">
+
+    <button onclick="applyFilters()">Suodata</button>
+    <button onclick="clearFilters()">Tyhjennä suodatus</button>
+  </div>
+
+  <!-- Vanhojen myyntien tarkastelu -->
+  <div id="viewSalesScreen" class="hidden">
+    <div class="container">
+      <h1>Kaikki Myynnit</h1>
+      <ul id="salesList" class="sales-list rounded"></ul>
+      <button id="deleteAllSalesBtn" class="secondary-btn">Poista kaikki myynnit</button>
+      <button id="goBackFromSalesBtn" class="secondary-btn">Takaisin</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
-
 </html>
