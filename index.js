@@ -29,21 +29,52 @@ document.addEventListener('DOMContentLoaded', () => {
 newSaleScreenBtn.addEventListener('click', () => {
   welcomeScreen.classList.add('hidden');
   newSaleScreen.classList.remove('hidden');
+  document.getElementById('saleDate').value = ''; // Tyhjennä kenttä oletuksena
+
+  // Generoi satunnainen tunnus
+  const randomId = Math.floor(1000 + Math.random() * 9000);
+
+  // Päivitä URL
+  const newUrl = `${window.location.origin}/neworder-${randomId}`;
+  window.history.pushState({ page: "newsale" }, "", newUrl);
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Asetetaan osoiteriville /front sovelluksen käynnistyessä
+  history.replaceState({}, '', '/front');
+  
+  welcomeScreen.classList.remove('hidden');
+  newSaleScreen.classList.add('hidden');
+  viewSalesScreen.classList.add('hidden');
+});
+
+// Uuden myynnin näkymä
+newSaleScreenBtn.addEventListener('click', () => {
+  const randomSaleNumber = Math.floor(Math.random() * 100000); // Satunnainen myyntinumero
+  history.pushState({}, '', `/newsale-${randomSaleNumber}`); // Päivitetään osoiterivi
+  welcomeScreen.classList.add('hidden');
+  newSaleScreen.classList.remove('hidden');
+});
+
+// Vanhojen myyntien näkymä
 viewSalesBtn.addEventListener('click', () => {
+  history.pushState({}, '', '/oldsales'); // Päivitetään osoiterivi
   welcomeScreen.classList.add('hidden');
   viewSalesScreen.classList.remove('hidden');
-  showFilteredSales();
+  showFilteredSales(); // Näytetään myynnit
 });
 
+// Paluu etusivulle uuden myynnin näkymästä
 goBackBtn.addEventListener('click', () => {
+  history.pushState({}, '', '/front'); // Palautetaan osoiterivi /front
   newSaleScreen.classList.add('hidden');
   welcomeScreen.classList.remove('hidden');
-  resetForm();
+  resetForm(); // Nollaa lomake
 });
 
+// Paluu etusivulle vanhojen myyntien näkymästä
 goBackFromSalesBtn.addEventListener('click', () => {
+  history.pushState({}, '', '/front'); // Palautetaan osoiterivi /front
   viewSalesScreen.classList.add('hidden');
   welcomeScreen.classList.remove('hidden');
 });
@@ -67,11 +98,12 @@ calculateProfitBtn.addEventListener('click', () => {
 });
 
 saveSaleBtn.addEventListener('click', () => {
+  const saleId = document.getElementById('saleId').value; // Hae myyntinumero
   const purchaseLocation = document.getElementById('purchaseLocation').value.trim();
   const productName = document.getElementById('productName').value.trim();
   const purchasePrice = parseFloat(document.getElementById('purchasePrice').value);
   const salePrice = parseFloat(document.getElementById('salePrice').value);
-  const saleDate = document.getElementById('saleDate').value.trim();  // Myyntipäivämäärä
+  const saleDate = document.getElementById('saleDate').value.trim();
 
   if (!purchaseLocation || !productName || isNaN(purchasePrice) || isNaN(salePrice) || !saleDate) {
     alert('Täytä kaikki kentät oikein ennen tallennusta.');
@@ -88,14 +120,15 @@ saveSaleBtn.addEventListener('click', () => {
 
   // Luo myyntitieto-objektin
   const sale = {
+    id: saleId, // Käytä olemassa olevaa myyntinumeroa
     purchaseLocation,
     productName,
     purchasePrice,
     salePrice,
     profit,
     profitPercentage,
-    saleDate,  // Päivämäärä, jonka käyttäjä syöttää
-    time, // Kellonaika
+    saleDate,
+    time,
   };
 
   // Tallenna localStorageen
@@ -103,7 +136,7 @@ saveSaleBtn.addEventListener('click', () => {
   sales.push(sale);
   localStorage.setItem('sales', JSON.stringify(sales));
 
-  alert('Myynti tallennettu!');
+  alert(`Myynti tallennettu! Myyntinumero on: ${saleId}`);
   resetForm();
 });
 
@@ -114,11 +147,11 @@ function showFilteredSales() {
     const saleItem = document.createElement('div');
     saleItem.className = 'sale-item';
 
-    // Korjattu päivämäärän käyttö: käytetään sale.saleDate
     saleItem.innerHTML = `
       <p><strong>${sale.productName}</strong> (${sale.purchaseLocation}, ${sale.saleDate})</p>
       <p>Ostohinta: €${sale.purchasePrice}, Myyntihinta: €${sale.salePrice}</p>
       <p>Kate: €${sale.profit}, Kateprosentti: ${sale.profitPercentage}%</p>
+      <p><strong>Myyntinumero:</strong> ${sale.id}</p>
       <button onclick="editSale(${index})">Muokkaa</button>
       <button onclick="deleteSale(${index})">Poista</button>
     `;
@@ -218,6 +251,7 @@ downloadJsonBtn.addEventListener('click', () => {
   document.body.removeChild(downloadAnchor);
 });
 
+
 // Nollaa lomake
 function resetForm() {
   document.getElementById('purchaseLocation').value = '';
@@ -228,3 +262,4 @@ function resetForm() {
   profitResults.classList.add('hidden');
   saveSaleBtn.classList.add('hidden');
 }
+
